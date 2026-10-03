@@ -1,0 +1,35 @@
+name: framework-launch-smoke
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+
+env:
+  BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || secrets.BOT_TOKEN_TEST || secrets.BOT_TOKEN }}
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install framework dependencies
+        run: python3 -m pip install --disable-pip-version-check --user -r <(unzip -p releases/AccountManager-1.0.1.zip 'AccountManager/requirements.txt')
+      - name: Launch framework with real Telegram bot
+        run: |
+          test -n "$BOT_TOKEN"
+          rm -rf /tmp/am-launch
+          mkdir -p /tmp/am-launch
+          unzip -q releases/AccountManager-1.0.1.zip -d /tmp/am-launch
+          printf 'BOT_TOKEN=%s\n' "$BOT_TOKEN" > /tmp/am-launch/AccountManager/configs/.env
+          cp /tmp/am-launch/AccountManager/configs/config.json.example /tmp/am-launch/AccountManager/configs/config.json
+          set +e
+          timeout --signal=INT --kill-after=10s 25s python3 main.py > /tmp/am-launch/framework.log 2>&1
+          rc=$?
+          set -e
+          cat /tmp/am-launch/framework.log
+          test "$rc" = 0 -o "$rc" = 124 -o "$rc" = 130
+          grep -F 'Бот запущен. Ожидание сообщений' /tmp/am-launch/framework.log
+          grep -F 'Бот остановлен.' /tmp/am-launch/framework.log
+          echo 'FRAMEWORK_REAL_LAUNCH_OK'
+        working-directory: /tmp/am-launch/AccountManager
