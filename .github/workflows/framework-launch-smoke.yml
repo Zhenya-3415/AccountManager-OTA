@@ -24,6 +24,7 @@ jobs:
           printf 'BOT_TOKEN=%s\n' "$BOT_TOKEN" > /tmp/am-launch/AccountManager/configs/.env
           cp /tmp/am-launch/AccountManager/configs/config.json.example /tmp/am-launch/AccountManager/configs/config.json
           set +e
+          cd /tmp/am-launch/AccountManager
           timeout --signal=INT --kill-after=10s 25s python3 main.py > /tmp/am-launch/framework.log 2>&1
           rc=$?
           set -e
@@ -32,4 +33,3 @@ jobs:
           grep -F 'Бот запущен. Ожидание сообщений' /tmp/am-launch/framework.log
           grep -F 'Бот остановлен.' /tmp/am-launch/framework.log
           echo 'FRAMEWORK_REAL_LAUNCH_OK'
-        working-directory: /tmp/am-launch/AccountManager
