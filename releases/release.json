@@ -1,0 +1,1 @@
+{"version":"1.0.2","channel":"candidate","artifact":"AccountManager-1.0.2.zip","tests":["unit","dynamic-smoke","fault-injection","rollback"]}
